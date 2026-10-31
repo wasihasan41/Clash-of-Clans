@@ -4,6 +4,8 @@ A fan-made web app for looking up any Clash of Clans player by tag. It shows the
 
 Built with Next.js 15 (App Router), TypeScript and MongoDB (optional).
 
+Live demo: https://dark-stats.vercel.app
+
 > Unofficial fan project. This content is not affiliated with, endorsed, sponsored or specifically approved by Supercell, and Supercell is not responsible for it. See Supercell's [Fan Content Policy](https://supercell.com/fan-content-policy).
 
 ## Features
