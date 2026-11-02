@@ -27,7 +27,7 @@ const SIEGE_MACHINE_NAMES = new Set([
   "Flame Flinger",
   "Battle Drill",
   "Troop Launcher",
-  "Air Troop Launcher",
+  "Sky Wagon",
 ]);
 
 export function isSuperTroop(name: string): boolean {

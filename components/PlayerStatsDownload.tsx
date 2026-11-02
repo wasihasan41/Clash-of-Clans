@@ -1,20 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { calcProgress, unitAtTownHall } from "@/lib/progress";
+import { calcProgress, unitsAtTownHall } from "@/lib/progress";
 import {
   cleanName,
   iconCandidates,
   isPet,
   type UnitKind,
 } from "@/lib/icons";
-import { isSuperTroop, isSiegeMachine } from "@/lib/troops";
+import { isSiegeMachine } from "@/lib/troops";
 import { getLeague } from "@/lib/league";
 import type { Unit, Player } from "@/lib/types";
+import type { LevelCategory } from "@/lib/townhall-levels";
 
 type ExportUnit = Unit & { kind: UnitKind };
 
-const CATEGORY_LEVELS: Record<UnitKind, Parameters<typeof unitAtTownHall>[1]> = {
+const CATEGORY_LEVELS: Record<UnitKind, LevelCategory> = {
   hero: "heroes",
   equipment: "equipment",
   troop: "troops",
@@ -24,20 +25,9 @@ const CATEGORY_LEVELS: Record<UnitKind, Parameters<typeof unitAtTownHall>[1]> = 
 };
 
 function visibleUnits(units: Unit[], kind: UnitKind, townHallLevel: number) {
-  return units
-    .filter(
-      (unit) =>
-        unit.village === "home" &&
-        !(kind === "troop" && isSuperTroop(unit.name)),
-    )
-    .flatMap((unit) => {
-      const current = unitAtTownHall(
-        unit,
-        CATEGORY_LEVELS[kind],
-        townHallLevel,
-      );
-      return current ? [{ ...current, kind }] : [];
-    });
+  return unitsAtTownHall(units, CATEGORY_LEVELS[kind], townHallLevel).map(
+    (unit) => ({ ...unit, kind }),
+  );
 }
 
 function getExportCategories(player: Player) {

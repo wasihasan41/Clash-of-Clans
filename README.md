@@ -10,9 +10,9 @@ Live demo: https://dark-stats.vercel.app
 
 ## Features
 
-- **Player search** by tag. Tags are cleaned up automatically (`#2pp`, `2PP` and ` 2pp ` all work).
+- **Player search** by tag. Tags are cleaned up automatically (`#2pp`, `2PP` and `2pp` all work).
 - **Profile**: name, tag, Town Hall icon, league icon (supports the new `leagueTier` league system), clan name and role, trophies, war stars, donations and more.
-- **Upgrade progress** for heroes, hero equipment, pets, troops and spells. Each category shows a progress percentage, a "x/y maxed" count and a level bar per unit. Equipped gear is shown under each hero.
+- **Upgrade progress** for heroes, hero equipment, pets, troops, siege machines and spells. Each category shows a progress percentage, a "x/y maxed" count and a level bar per unit, including eligible units not yet unlocked at level 0. Equipped gear is shown under each hero.
 - **Battle log** from `GET /players/{tag}/battlelog`, with Home, Ranked and Legend tabs, stars, destruction, duration, loot, the opponent (linked to their profile) and a "Copy army" link.
 - **Battle history (optional)**: the API only returns recent battles, so with MongoDB connected each new battle is saved and the history keeps growing.
 - **Server-side API calls**: the API key never reaches the browser.
@@ -20,15 +20,15 @@ Live demo: https://dark-stats.vercel.app
 
 ## Tech stack
 
-| Area | Choice |
-|---|---|
-| Framework | Next.js 15, App Router, React Server Components |
-| Language | TypeScript (strict mode) |
-| Styling | Plain CSS (`app/globals.css`) |
-| Data | Official Clash of Clans API |
-| Database | MongoDB (optional, for battle history) |
-| Quality | ESLint |
-| Package manager | pnpm |
+| Area            | Choice                                          |
+| --------------- | ----------------------------------------------- |
+| Framework       | Next.js 15, App Router, React Server Components |
+| Language        | TypeScript (strict mode)                        |
+| Styling         | Plain CSS (`app/globals.css`)                   |
+| Data            | Official Clash of Clans API                     |
+| Database        | MongoDB (optional, for battle history)          |
+| Quality         | ESLint                                          |
+| Package manager | pnpm                                            |
 
 ## Getting started
 
@@ -61,14 +61,14 @@ Copy the example file and fill it in:
 cp .env.example .env.local      # Windows: copy .env.example .env.local
 ```
 
-| Variable | Required | Description |
-|---|---|---|
-| `COC_API_TOKEN` | Yes | Your Clash of Clans API key |
-| `COC_API_BASE` | No | Alternative API base URL, for example a proxy. Defaults to `https://api.clashofclans.com/v1` |
-| `MONGODB_URI` | No | MongoDB connection string. Without it the battle log shows live data only |
-| `MONGODB_DB` | No | Database name. Defaults to `coc_lookup` |
-| `TRACK_SECRET` | No | Secret that protects the `/api/track` endpoint |
-| `TRACK_PLAYER_TAGS` | No | Comma separated player tags that `/api/track` should save battles for, for example `#2PP,#YOURTAG` |
+| Variable            | Required | Description                                                                                        |
+| ------------------- | -------- | -------------------------------------------------------------------------------------------------- |
+| `COC_API_TOKEN`     | Yes      | Your Clash of Clans API key                                                                        |
+| `COC_API_BASE`      | No       | Alternative API base URL, for example a proxy. Defaults to `https://api.clashofclans.com/v1`       |
+| `MONGODB_URI`       | No       | MongoDB connection string. Without it the battle log shows live data only                          |
+| `MONGODB_DB`        | No       | Database name. Defaults to `coc_lookup`                                                            |
+| `TRACK_SECRET`      | No       | Secret that protects the `/api/track` endpoint                                                     |
+| `TRACK_PLAYER_TAGS` | No       | Comma separated player tags that `/api/track` should save battles for, for example `#2PP,#YOURTAG` |
 
 Restart the dev server after changing `.env.local`.
 
@@ -82,13 +82,13 @@ Open [http://localhost:3000](http://localhost:3000) and search for a player tag.
 
 ## Scripts
 
-| Command | What it does |
-|---|---|
-| `pnpm dev` | Start the development server |
-| `pnpm build` | Create a production build |
-| `pnpm start` | Run the production build |
+| Command          | What it does                           |
+| ---------------- | -------------------------------------- |
+| `pnpm dev`       | Start the development server           |
+| `pnpm build`     | Create a production build              |
+| `pnpm start`     | Run the production build               |
 | `pnpm typecheck` | Type-check the project with TypeScript |
-| `pnpm lint` | Lint the code with ESLint |
+| `pnpm lint`      | Lint the code with ESLint              |
 
 ## How the battle log works
 
@@ -113,6 +113,7 @@ It reads the players listed in `TRACK_PLAYER_TAGS`. Any scheduler works (a cron 
 - On defense rows, the army code belongs to the attacker.
 - The army code contains the heroes, pets and equipment that were used. The app shows how many were used, but it does not translate their numeric ids into names yet.
 - Progress percentages are relative to what is possible at the player's current Town Hall level, so 100% means maxed for that Town Hall, not maxed in the game.
+- Generated level-0 items are gated by their first available Town Hall (including Barracks, Spell Factory, Workshop, Pet House and Blacksmith unlocks). Default hero equipment unlocks with its hero (starting with Barbarian Puppet and Rage Vial at Town Hall 4); other equipment requires the Blacksmith and respects its upgrade unlocks/caps. Locked API entries are hidden. The reference roster is cross-checked against [Clash Ninja's Town Hall level tables](https://www.clash.ninja/guides/max-levels-for-each-th) and [Blacksmith equipment unlocks](https://www.clash.ninja/guides/what-is-hero-equipment).
 
 ## Using a proxy (changing IP, deployment)
 
@@ -160,13 +161,13 @@ lib/
 
 ## Troubleshooting
 
-| Problem | Likely cause |
-|---|---|
-| `403` or "API key rejected" | The key's allowed IP does not match your current public IP. Create a new key for the current IP, or use the proxy |
-| `404` or "Nothing found" | The player tag is wrong |
-| `429` | Too many requests. Wait a few seconds |
-| "COC_API_TOKEN is not set" | `.env.local` is missing, in the wrong folder, or the server was not restarted |
-| Battle log says "Live data only" | MongoDB is not connected. Check `MONGODB_URI` and the terminal output of `pnpm dev` |
+| Problem                          | Likely cause                                                                                                      |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `403` or "API key rejected"      | The key's allowed IP does not match your current public IP. Create a new key for the current IP, or use the proxy |
+| `404` or "Nothing found"         | The player tag is wrong                                                                                           |
+| `429`                            | Too many requests. Wait a few seconds                                                                             |
+| "COC_API_TOKEN is not set"       | `.env.local` is missing, in the wrong folder, or the server was not restarted                                     |
+| Battle log says "Live data only" | MongoDB is not connected. Check `MONGODB_URI` and the terminal output of `pnpm dev`                               |
 
 ## Credits
 

@@ -1,5 +1,14 @@
 import type { Unit } from "./types";
-import { maxLevelAtTownHall, type LevelCategory } from "./townhall-levels";
+import {
+  canonicalUnitDisplayName,
+  canonicalUnitName,
+  isEquipmentUnlockedWithHero,
+  maxLevelAtTownHall,
+  unitUnlockTownHall,
+  unitCatalog,
+  type LevelCategory,
+} from "./townhall-levels";
+import { isSuperTroop } from "./troops";
 
 export interface Progress {
   current: number; // levels abhi tak ke
@@ -14,14 +23,19 @@ export function isEquipmentUnlocked(equipment: Unit): boolean {
   return equipment.maxLevel > 1;
 }
 
-const EQUIPMENT_MAX_LEVELS_BY_TOWN_HALL = [
-  { townHall: 8, common: 9, epic: 12 },
-  { townHall: 10, common: 12, epic: 15 },
-  { townHall: 12, common: 15, epic: 18 },
-  { townHall: 14, common: 18, epic: 21 },
-  { townHall: 15, common: 18, epic: 24 },
-  { townHall: 16, common: 18, epic: 27 },
+const EQUIPMENT_MAX_LEVELS_BY_BLACKSMITH_LEVEL = [
+  { blacksmithLevel: 1, common: 9, epic: 12 },
+  { blacksmithLevel: 3, common: 12, epic: 15 },
+  { blacksmithLevel: 5, common: 15, epic: 18 },
+  { blacksmithLevel: 7, common: 18, epic: 21 },
+  { blacksmithLevel: 8, common: 18, epic: 24 },
+  { blacksmithLevel: 9, common: 18, epic: 27 },
 ] as const;
+
+function blacksmithLevelAtTownHall(townHallLevel: number): number {
+  if (!Number.isInteger(townHallLevel) || townHallLevel < 8) return 0;
+  return Math.min(townHallLevel - 7, 10);
+}
 
 export function equipmentMaxLevel(
   maxLevel: number,
@@ -29,9 +43,10 @@ export function equipmentMaxLevel(
 ): number {
   if (maxLevel <= 1) return maxLevel;
 
-  const caps = [...EQUIPMENT_MAX_LEVELS_BY_TOWN_HALL]
+  const blacksmithLevel = blacksmithLevelAtTownHall(townHallLevel);
+  const caps = [...EQUIPMENT_MAX_LEVELS_BY_BLACKSMITH_LEVEL]
     .reverse()
-    .find((entry) => townHallLevel >= entry.townHall);
+    .find((entry) => blacksmithLevel >= entry.blacksmithLevel);
   if (!caps) return 1;
 
   const rarityCap = maxLevel >= 27 ? caps.epic : caps.common;
@@ -43,19 +58,35 @@ export function unitAtTownHall(
   category: LevelCategory,
   townHallLevel: number,
 ): Unit | null {
-  const townHallMax = maxLevelAtTownHall(category, unit.name, townHallLevel);
-  if (townHallMax === 0) return null;
+  const equipmentUnlockedWithHero =
+    category === "equipment" && isEquipmentUnlockedWithHero(unit.name);
+  const equipmentUnlockTownHall =
+    category === "equipment"
+      ? unitUnlockTownHall(category, unit.name)
+      : undefined;
+  const defaultEquipmentAvailable =
+    equipmentUnlockedWithHero &&
+    equipmentUnlockTownHall !== undefined &&
+    townHallLevel >= equipmentUnlockTownHall;
 
   if (
     category === "equipment" &&
-    townHallMax === undefined &&
-    !isEquipmentUnlocked(unit)
+    !isEquipmentUnlocked(unit) &&
+    !defaultEquipmentAvailable
   ) {
     return null;
   }
 
+  const unlockTownHall = unitUnlockTownHall(category, unit.name);
+  if (unlockTownHall !== undefined && townHallLevel < unlockTownHall) {
+    return null;
+  }
+
+  const townHallMax = maxLevelAtTownHall(category, unit.name, townHallLevel);
+  if (townHallMax === 0 && unlockTownHall === undefined) return null;
+
   const maxLevel =
-    townHallMax ??
+    (townHallMax === 0 && unlockTownHall !== undefined ? 1 : townHallMax) ??
     (category === "equipment"
       ? equipmentMaxLevel(unit.maxLevel, townHallLevel)
       : unit.maxLevel);
@@ -69,10 +100,55 @@ export function unitAtTownHall(
 
   return {
     ...unit,
-    level: Math.min(unit.level, maxLevel),
+    name: canonicalUnitDisplayName(category, unit.name),
+    level: Math.min(
+      equipmentUnlockedWithHero && townHallLevel < 8
+        ? Math.max(unit.level, 1)
+        : unit.level,
+      maxLevel,
+    ),
     maxLevel,
     equipment,
   };
+}
+
+export function unitsAtTownHall(
+  units: Unit[],
+  category: LevelCategory,
+  townHallLevel: number,
+): Unit[] {
+  const homeUnits = units.filter((unit) => unit.village === "home");
+  const seen = new Set<string>();
+  const visible = homeUnits.flatMap((unit) => {
+    if (category === "troops" && isSuperTroop(unit.name)) return [];
+    const canonicalName = canonicalUnitName(unit.name);
+    if (seen.has(canonicalName)) return [];
+    seen.add(canonicalName);
+    const current = unitAtTownHall(unit, category, townHallLevel);
+    return current ? [current] : [];
+  });
+
+  for (const { name, maxLevel } of unitCatalog(category)) {
+    const canonicalName = canonicalUnitName(name);
+    if (
+      seen.has(canonicalName) ||
+      (category === "troops" && isSuperTroop(name))
+    ) {
+      continue;
+    }
+
+    const current = unitAtTownHall(
+      { name, level: 0, maxLevel, village: "home" },
+      category,
+      townHallLevel,
+    );
+    if (current) {
+      seen.add(canonicalName);
+      visible.push(current);
+    }
+  }
+
+  return visible;
 }
 
 // Ek category (heroes, troops, ...) ka progress: sum(level) / sum(maxLevel)

@@ -326,6 +326,7 @@ const LEVEL_CAPS: Record<LevelCategory, Record<string, readonly number[]>> = {
     "Rage Vial": [
       0, 0, 0, 0, 0, 0, 0, 9, 9, 12, 12, 15, 15, 18, 18, 18, 18, 18,
     ],
+    "Revenge Deck": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 27, 27, 27],
     "Rocket Backpack": [
       0, 0, 0, 0, 0, 0, 0, 12, 12, 15, 15, 18, 18, 21, 24, 27, 27, 27,
     ],
@@ -351,9 +352,7 @@ const LEVEL_CAPS: Record<LevelCategory, Record<string, readonly number[]>> = {
     Vampstache: [0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 12, 15, 15, 18, 18, 18, 18, 18],
   },
   siege: {
-    "Air Troop Launcher": [
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 4,
-    ],
+    "Sky Wagon": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 4],
     "Battle Blimp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 4, 4, 5, 5, 5, 6],
     "Battle Drill": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 6],
     "Flame Flinger": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 5, 5],
@@ -385,11 +384,324 @@ const UNIT_NAME_ALIASES: Record<string, string> = {
   hogriderdoll: "hogriderpuppet",
 };
 
+const CATALOG_EXCLUSIONS: Partial<Record<LevelCategory, ReadonlySet<string>>> =
+  {
+    troops: new Set([
+      "Azure Dragon",
+      "Barbarian Kicker",
+      "Barcher",
+      "Battle Ram",
+      "Broom Witch",
+      "COOKIE",
+      "Disarmer",
+      "Elephant",
+      "Elephant Rider",
+      "Event Meteor Golem",
+      "Firecracker",
+      "Giant Giant",
+      "Giant Skeleton",
+      "Giant Thrower",
+      "Hog Wizard",
+      "Ice Minion",
+      "Ice Wizard",
+      "KANE",
+      "Lavaloon",
+      "MECHA",
+      "Party Wizard",
+      "Pumpkin Barbarian Armored",
+      "Ram Rider",
+      "Rider",
+      "Royal Ghost",
+      "Skeleton Barrel",
+      "Snake Barrel",
+      "Tax Collector",
+      "Totem Thrower",
+      "Trap Air Skeleton",
+      "Undead Wrestler Big Boy",
+      "UndeadWrestler",
+      "Witch Golem",
+      "Witch Golem Big Boy",
+      "YEETer",
+    ]),
+    spells: new Set([
+      "AngrySpell",
+      "BagOfFrostmites",
+      "Birthday2017",
+      "Santas Surprise",
+      "Yellow Card",
+    ]),
+    equipment: new Set([
+      "Cosmic Portal",
+      "Draconic Counter",
+      "ElectroAttack",
+      "Frost Charm",
+      "MP Trap Shield",
+      "Piercing Arrow",
+    ]),
+  };
+
 function normalizeUnitName(name: string): string {
   return name
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
+}
+
+export function canonicalUnitName(name: string): string {
+  const normalized = normalizeUnitName(name);
+  return UNIT_NAME_ALIASES[normalized] ?? normalized;
+}
+
+const UNIT_UNLOCKS_BY_CATEGORY: Partial<
+  Record<LevelCategory, Readonly<Record<string, number>>>
+> = {
+  heroes: {
+    "Barbarian King": 4,
+    "Archer Queen": 8,
+    "Grand Warden": 11,
+    "Royal Champion": 13,
+    "Minion Prince": 9,
+    "Dragon Duke": 15,
+  },
+  troops: {
+    Barbarian: 1,
+    Archer: 1,
+    Giant: 1,
+    Goblin: 2,
+    "Wall Breaker": 3,
+    Balloon: 4,
+    Wizard: 5,
+    Healer: 6,
+    Dragon: 7,
+    PEKKA: 8,
+    "Baby Dragon": 9,
+    Miner: 10,
+    "Electro Dragon": 11,
+    Yeti: 12,
+    "Dragon Rider": 13,
+    "Electro Titan": 14,
+    "Root Rider": 15,
+    Thrower: 16,
+    Minion: 7,
+    "Hog Rider": 7,
+    Valkyrie: 8,
+    Golem: 8,
+    Witch: 9,
+    "Lava Hound": 9,
+    Bowler: 10,
+    "Ice Golem": 11,
+    Headhunter: 12,
+    "Apprentice Warden": 13,
+    Druid: 14,
+    Furnace: 15,
+    "Ruin Witch": 16,
+  },
+  spells: {
+    Lightning: 5,
+    Healing: 6,
+    Rage: 7,
+    Poison: 8,
+    Earthquake: 8,
+    Jump: 9,
+    Freeze: 9,
+    Haste: 9,
+    "Skeleton Spell": 9,
+    Clone: 10,
+    "Bat Spell": 10,
+    Invisibility: 11,
+    Overgrowth: 12,
+    Recall: 13,
+    "Ice Block": 14,
+    Revive: 15,
+    AngrySpell: 15,
+    "Totem Spell": 16,
+  },
+  siege: {
+    "Wall Wrecker": 12,
+    "Battle Blimp": 12,
+    "Stone Slammer": 12,
+    "Siege Barracks": 13,
+    "Log Launcher": 13,
+    "Flame Flinger": 14,
+    "Battle Drill": 15,
+    "Troop Launcher": 16,
+    "Sky Wagon": 16,
+  },
+};
+
+const EQUIPMENT_HERO_BY_NAME: Readonly<Record<string, string>> = {
+  "Action Figure": "Archer Queen",
+  "Archer Puppet": "Archer Queen",
+  "Barbarian Puppet": "Barbarian King",
+  "Dark Crown": "Minion Prince",
+  "Dark Orb": "Minion Prince",
+  "Earthquake Boots": "Barbarian King",
+  "Electro Boots": "Royal Champion",
+  "Electro Fangs": "Dragon Duke",
+  "Eternal Tome": "Grand Warden",
+  "Fire Heart": "Dragon Duke",
+  Fireball: "Grand Warden",
+  "Flame Blower": "Dragon Duke",
+  "Frozen Arrow": "Archer Queen",
+  "Giant Arrow": "Archer Queen",
+  "Giant Gauntlet": "Barbarian King",
+  "Haste Vial": "Royal Champion",
+  "Healer Puppet": "Archer Queen",
+  "Healing Tome": "Grand Warden",
+  "Henchmen Puppet": "Minion Prince",
+  "Heroic Torch": "Grand Warden",
+  "Hog Rider Puppet": "Royal Champion",
+  "Invisibility Vial": "Archer Queen",
+  "Lavaloon Puppet": "Grand Warden",
+  "Life Gem": "Grand Warden",
+  "Magic Mirror": "Archer Queen",
+  "Metal Pants": "Minion Prince",
+  "Meteor Staff": "Minion Prince",
+  "Monolith Arrow": "Archer Queen",
+  "Noble Iron": "Minion Prince",
+  "Rage Gem": "Grand Warden",
+  "Rage Vial": "Barbarian King",
+  "Revenge Deck": "Dragon Duke",
+  "Rocket Backpack": "Dragon Duke",
+  "Rocket Spear": "Royal Champion",
+  "Royal Gem": "Royal Champion",
+  "Seeking Shield": "Royal Champion",
+  "Snake Bracelet": "Barbarian King",
+  "Spiky Ball": "Barbarian King",
+  "Stick Horse": "Barbarian King",
+  "Stun Blaster": "Dragon Duke",
+  "Portal Pendant": "Minion Prince",
+  Vampstache: "Barbarian King",
+};
+
+const EQUIPMENT_BLACKSMITH_UNLOCK_LEVEL: Readonly<Record<string, number>> = {
+  "Earthquake Boots": 1,
+  "Giant Arrow": 2,
+  "Metal Pants": 3,
+  Vampstache: 3,
+  "Rage Gem": 4,
+  "Healer Puppet": 5,
+  "Noble Iron": 5,
+  "Healing Tome": 6,
+  "Hog Rider Puppet": 7,
+  "Haste Vial": 8,
+  "Electro Fangs": 10,
+};
+
+const EQUIPMENT_UNLOCKED_WITH_HERO = new Set([
+  "Barbarian Puppet",
+  "Rage Vial",
+  "Archer Puppet",
+  "Invisibility Vial",
+  "Eternal Tome",
+  "Life Gem",
+  "Royal Gem",
+  "Seeking Shield",
+  "Henchmen Puppet",
+  "Dark Orb",
+  "Fire Heart",
+  "Flame Blower",
+]);
+
+export function isEquipmentUnlockedWithHero(name: string): boolean {
+  const canonicalName = canonicalUnitName(name);
+  return [...EQUIPMENT_UNLOCKED_WITH_HERO].some(
+    (candidate) => canonicalUnitName(candidate) === canonicalName,
+  );
+}
+
+const SPELL_DISPLAY_NAMES: Record<string, string> = {
+  lightning: "Lightning Spell",
+  healing: "Healing Spell",
+  rage: "Rage Spell",
+  poison: "Poison Spell",
+  earthquake: "Earthquake Spell",
+  jump: "Jump Spell",
+  freeze: "Freeze Spell",
+  haste: "Haste Spell",
+  skeletonspell: "Skeleton Spell",
+  clone: "Clone Spell",
+  batspell: "Bat Spell",
+  invisibility: "Invisibility Spell",
+  overgrowth: "Overgrowth Spell",
+  recall: "Recall Spell",
+  iceblock: "Ice Block Spell",
+  revive: "Revive Spell",
+  angryspell: "Angry Spell",
+  totemspell: "Totem Spell",
+};
+
+export function unitUnlockTownHall(
+  category: LevelCategory,
+  name: string,
+): number | undefined {
+  const canonicalName = canonicalUnitName(name);
+  if (category === "equipment") {
+    const equipmentName = Object.keys(EQUIPMENT_HERO_BY_NAME).find(
+      (candidate) => canonicalUnitName(candidate) === canonicalName,
+    );
+    if (!equipmentName) return undefined;
+    const hero = EQUIPMENT_HERO_BY_NAME[equipmentName];
+    if (!hero) return undefined;
+
+    const heroUnlockTownHall = unitUnlockTownHall("heroes", hero);
+    const blacksmithLevel = Object.entries(
+      EQUIPMENT_BLACKSMITH_UNLOCK_LEVEL,
+    ).find(
+      ([candidate]) => canonicalUnitName(candidate) === canonicalName,
+    )?.[1];
+    const defaultGear = EQUIPMENT_UNLOCKED_WITH_HERO.has(equipmentName);
+    const blacksmithUnlockTownHall = defaultGear
+      ? undefined
+      : (blacksmithLevel ?? 1) + 7;
+
+    if (heroUnlockTownHall === undefined) return blacksmithUnlockTownHall;
+    return Math.max(heroUnlockTownHall, blacksmithUnlockTownHall ?? 0);
+  }
+
+  const explicitUnlock = Object.entries(
+    UNIT_UNLOCKS_BY_CATEGORY[category] ?? {},
+  ).find(([candidate]) => canonicalUnitName(candidate) === canonicalName)?.[1];
+  if (explicitUnlock !== undefined) return explicitUnlock;
+
+  if (category !== "heroes" && category !== "pets") {
+    return undefined;
+  }
+
+  const levels = Object.entries(LEVEL_CAPS[category]).find(
+    ([candidate]) => canonicalUnitName(candidate) === canonicalName,
+  )?.[1];
+  const firstAvailableLevel = levels?.findIndex((level) => level > 0) ?? -1;
+  return firstAvailableLevel < 0 ? undefined : firstAvailableLevel + 1;
+}
+
+export function canonicalUnitDisplayName(
+  category: LevelCategory,
+  name: string,
+): string {
+  const canonicalName = canonicalUnitName(name);
+  return category === "spells"
+    ? (SPELL_DISPLAY_NAMES[canonicalName] ?? name)
+    : name;
+}
+
+export function unitCatalog(
+  category: LevelCategory,
+): { name: string; maxLevel: number }[] {
+  return Object.entries(LEVEL_CAPS[category])
+    .filter(([name, levels]) => {
+      const distinctLevels = new Set(levels.filter((level) => level > 0));
+      const singleLevelPet = category === "pets" && name === "Crow";
+      return (
+        !CATALOG_EXCLUSIONS[category]?.has(name) &&
+        unitUnlockTownHall(category, name) !== undefined &&
+        (distinctLevels.size > 1 || singleLevelPet)
+      );
+    })
+    .map(([name, levels]) => ({
+      name,
+      maxLevel: Math.max(...levels),
+    }));
 }
 
 export function maxLevelAtTownHall(
@@ -398,12 +710,9 @@ export function maxLevelAtTownHall(
   townHallLevel: number,
 ): number | undefined {
   if (!Number.isInteger(townHallLevel) || townHallLevel < 1) return undefined;
-  const normalized = normalizeUnitName(name);
-  const lookupName = UNIT_NAME_ALIASES[normalized] ?? normalized;
+  const canonicalName = canonicalUnitName(name);
   const key = Object.keys(LEVEL_CAPS[category]).find(
-    (candidate) =>
-      normalizeUnitName(candidate) ===
-      (UNIT_NAME_ALIASES[lookupName] ?? lookupName),
+    (candidate) => canonicalUnitName(candidate) === canonicalName,
   );
   const levels = key ? LEVEL_CAPS[category][key] : undefined;
   return levels?.[Math.min(townHallLevel, 18) - 1];

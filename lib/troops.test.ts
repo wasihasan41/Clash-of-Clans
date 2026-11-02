@@ -11,7 +11,8 @@ describe("isSuperTroop", () => {
   describe("isSiegeMachine", () => {
     it("recognizes siege machines separately from troops", () => {
       expect(isSiegeMachine("Wall Wrecker")).toBe(true);
-      expect(isSiegeMachine("Air Troop Launcher")).toBe(true);
+      expect(isSiegeMachine("Sky Wagon")).toBe(true);
+      expect(isSiegeMachine("Air Troop Launcher")).toBe(false);
       expect(isSiegeMachine("Barbarian")).toBe(false);
     });
   });

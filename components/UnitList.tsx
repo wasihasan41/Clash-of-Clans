@@ -2,7 +2,7 @@ import { iconCandidates, type UnitKind } from "@/lib/icons";
 import {
   calcProgress,
   isEquipmentUnlocked,
-  unitAtTownHall,
+  unitsAtTownHall,
 } from "@/lib/progress";
 import type { LevelCategory } from "@/lib/townhall-levels";
 import { isSuperTroop } from "@/lib/troops";
@@ -38,14 +38,7 @@ export function UnitList({
       ? homeUnits.filter(
           (unit) => kind !== "equipment" || isEquipmentUnlocked(unit),
         )
-      : homeUnits.flatMap((unit) => {
-          const current = unitAtTownHall(
-            unit,
-            LEVEL_CATEGORY_BY_KIND[kind],
-            townHallLevel,
-          );
-          return current ? [current] : [];
-        });
+      : unitsAtTownHall(homeUnits, LEVEL_CATEGORY_BY_KIND[kind], townHallLevel);
   if (home.length === 0) return null;
 
   const progress = calcProgress(home);

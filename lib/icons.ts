@@ -48,7 +48,10 @@ export function iconCandidates(kind: UnitKind, name: string): string[] {
     case "siege":
       return [`${BASE}/troops/${n}/icon.webp`]; // documented
     case "spell":
-      return [`${BASE}/spells/${n}.webp`]; // documented
+      return [
+        `${BASE}/spells/${n}.webp`,
+        `${BASE}/spells/${n.endsWith("_spell") ? n.slice(0, -6) : `${n}_spell`}.webp`,
+      ]; // documented
     case "hero":
       return [`${BASE}/heroes/${n}/icon.webp`]; // guess
     case "equipment":
