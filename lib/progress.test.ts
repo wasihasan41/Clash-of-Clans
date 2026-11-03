@@ -141,7 +141,7 @@ describe("calcProgress", () => {
       }
     });
 
-    it("hides API-locked equipment even when the Blacksmith can upgrade it", () => {
+    it("shows API-locked equipment at level zero when it is available at the Town Hall", () => {
       const lockedEquipment = {
         ...unit(1, 1),
         name: "Giant Gauntlet",
@@ -150,7 +150,57 @@ describe("calcProgress", () => {
       expect(unitAtTownHall(lockedEquipment, "equipment", 18)).toBeNull();
       expect(
         unitsAtTownHall([lockedEquipment], "equipment", 18),
-      ).not.toContainEqual(expect.objectContaining({ name: "Giant Gauntlet" }));
+      ).toContainEqual(
+        expect.objectContaining({
+          name: "Giant Gauntlet",
+          level: 0,
+          maxLevel: 27,
+        }),
+      );
+    });
+
+    it("does not let a locked API placeholder suppress eligible Haste Vial", () => {
+      const lockedHasteVial = {
+        ...unit(1, 1),
+        name: "Haste Vial",
+      };
+
+      expect(
+        unitsAtTownHall([lockedHasteVial], "equipment", 16),
+      ).toContainEqual(
+        expect.objectContaining({
+          name: "Haste Vial",
+          level: 0,
+          maxLevel: 18,
+        }),
+      );
+      expect(
+        unitsAtTownHall([lockedHasteVial], "equipment", 14),
+      ).not.toContainEqual(expect.objectContaining({ name: "Haste Vial" }));
+    });
+
+    it("shows locked API names for renamed equipment using current catalog names", () => {
+      const lockedEquipment = [
+        { ...unit(1, 1), name: "Frost Flake" },
+        { ...unit(1, 1), name: "Portal Pendant" },
+      ];
+
+      expect(
+        unitsAtTownHall(lockedEquipment, "equipment", 16),
+      ).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: "Frost Flake",
+            level: 0,
+            maxLevel: 27,
+          }),
+          expect.objectContaining({
+            name: "Portal Pendant",
+            level: 0,
+            maxLevel: 27,
+          }),
+        ]),
+      );
     });
 
     it("gates generated equipment by its Blacksmith unlock upgrade", () => {
@@ -343,13 +393,14 @@ describe("calcProgress", () => {
 
       expect(equipment.map((item) => item.name)).not.toEqual(
         expect.arrayContaining([
-          "Cosmic Portal",
           "Draconic Counter",
           "ElectroAttack",
-          "Frost Charm",
           "MP Trap Shield",
           "Piercing Arrow",
         ]),
+      );
+      expect(equipment.map((item) => item.name)).toEqual(
+        expect.arrayContaining(["Portal Pendant", "Frost Flake"]),
       );
       expect(troops.map((item) => item.name)).not.toEqual(
         expect.arrayContaining(["Elephant", "Rider"]),

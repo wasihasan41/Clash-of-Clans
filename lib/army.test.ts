@@ -33,13 +33,56 @@ describe("loadoutSummary", () => {
 });
 
 describe("equipmentName", () => {
-  it("maps army-code equipment IDs to item names", () => {
-    expect(equipmentName(0)).toBe("Barbarian Puppet");
-    expect(equipmentName(14)).toBe("Spiky Ball");
-    expect(equipmentName(16)).toBe("Monolith Arrow");
-    expect(equipmentName(59)).toBe("Electro Fangs");
-    expect(equipmentName(60)).toBe("Revenge Deck");
-    expect(equipmentName(61)).toBe("Portal Pendant");
+  it("maps every army-code equipment ID to its item name", () => {
+    const equipment = [
+      [0, "Barbarian Puppet"],
+      [1, "Rage Vial"],
+      [2, "Archer Puppet"],
+      [3, "Invisibility Vial"],
+      [4, "Eternal Tome"],
+      [5, "Life Gem"],
+      [6, "Seeking Shield"],
+      [7, "Royal Gem"],
+      [8, "Earthquake Boots"],
+      [9, "Hog Rider Puppet"],
+      [10, "Giant Gauntlet"],
+      [11, "Vampstache"],
+      [12, "Haste Vial"],
+      [13, "Rocket Spear"],
+      [14, "Spiky Ball"],
+      [15, "Frozen Arrow"],
+      [16, "Monolith Arrow"],
+      [17, "Giant Arrow"],
+      [19, "Heroic Torch"],
+      [20, "Healer Puppet"],
+      [22, "Fireball"],
+      [24, "Rage Gem"],
+      [32, "Snake Bracelet"],
+      [34, "Healing Tome"],
+      [35, "Dark Crown"],
+      [39, "Magic Mirror"],
+      [40, "Electro Boots"],
+      [41, "Lavaloon Puppet"],
+      [42, "Henchmen Puppet"],
+      [43, "Dark Orb"],
+      [44, "Metal Pants"],
+      [47, "Noble Iron"],
+      [48, "Action Figure"],
+      [49, "Meteor Staff"],
+      [50, "Frost Flake"],
+      [51, "Stick Horse"],
+      [52, "Fire Heart"],
+      [53, "Rocket Backpack"],
+      [56, "Stun Blaster"],
+      [57, "Flame Blower"],
+      [59, "Electro Fangs"],
+      [60, "Revenge Deck"],
+      [61, "Portal Pendant"],
+    ] as const;
+
+    for (const [id, name] of equipment) {
+      expect(equipmentName(id)).toBe(name);
+    }
   });
 
   it("returns undefined for an unrecognized equipment ID", () => {
@@ -48,9 +91,19 @@ describe("equipmentName", () => {
 });
 
 describe("heroName", () => {
-  it("maps army-code hero IDs to names", () => {
-    expect(heroName(0)).toBe("Barbarian King");
-    expect(heroName(4)).toBe("Royal Champion");
+  it("maps every army-code hero ID to its name", () => {
+    const heroes = [
+      [0, "Barbarian King"],
+      [1, "Archer Queen"],
+      [2, "Grand Warden"],
+      [4, "Royal Champion"],
+      [6, "Minion Prince"],
+      [7, "Dragon Duke"],
+    ] as const;
+
+    for (const [id, name] of heroes) {
+      expect(heroName(id)).toBe(name);
+    }
   });
 
   it("returns undefined for an unrecognized hero ID", () => {
@@ -59,10 +112,25 @@ describe("heroName", () => {
 });
 
 describe("petName", () => {
-  it("maps army-code pet IDs to names", () => {
-    expect(petName(0)).toBe("L.A.S.S.I");
-    expect(petName(9)).toBe("Frosty");
-    expect(petName(17)).toBe("Greedy Raven");
+  it("maps every army-code pet ID to its name", () => {
+    const pets = [
+      [0, "L.A.S.S.I"],
+      [1, "Mighty Yak"],
+      [2, "Electro Owl"],
+      [3, "Unicorn"],
+      [4, "Phoenix"],
+      [7, "Poison Lizard"],
+      [8, "Diggy"],
+      [9, "Frosty"],
+      [10, "Spirit Fox"],
+      [11, "Angry Jelly"],
+      [16, "Sneezy"],
+      [17, "Greedy Raven"],
+    ] as const;
+
+    for (const [id, name] of pets) {
+      expect(petName(id)).toBe(name);
+    }
   });
 
   it("returns undefined for an unrecognized pet ID", () => {

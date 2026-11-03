@@ -4,8 +4,8 @@ import { SearchNav } from "@/components/SearchNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Clash Lookup",
-  description: "Look up Clash of Clans players, clans and leaderboards.",
+  title: "Dark Stats",
+  description: " Search a player by tag to see their heroes, troops, equipment, pets, spells and recent battles."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <header className="site-header">
           <h1 className="brand">
-            COC STATS TRACKER
+            DARK STATS
           </h1>
           <SearchNav />
         </header>

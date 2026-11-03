@@ -244,7 +244,7 @@ const LEVEL_CAPS: Record<LevelCategory, Record<string, readonly number[]>> = {
     "Barbarian Puppet": [
       0, 0, 0, 0, 0, 0, 0, 9, 9, 12, 12, 15, 15, 18, 18, 18, 18, 18,
     ],
-    "Cosmic Portal": [
+    "Portal Pendant": [
       0, 0, 0, 0, 0, 0, 0, 12, 12, 15, 15, 18, 18, 21, 24, 27, 27, 27,
     ],
     "Dark Crown": [
@@ -271,7 +271,7 @@ const LEVEL_CAPS: Record<LevelCategory, Record<string, readonly number[]>> = {
     "Flame Blower": [
       0, 0, 0, 0, 0, 0, 0, 9, 9, 12, 12, 15, 15, 18, 18, 18, 18, 18,
     ],
-    "Frost Charm": [
+    "Frost Flake": [
       0, 0, 0, 0, 0, 0, 0, 12, 12, 15, 15, 18, 18, 21, 24, 27, 27, 27,
     ],
     "Frozen Arrow": [
@@ -382,6 +382,8 @@ const UNIT_NAME_ALIASES: Record<string, string> = {
   santassurprise: "santassurprise",
   greedyraven: "crow",
   hogriderdoll: "hogriderpuppet",
+  cosmicportal: "portalpendant",
+  frostcharm: "frostflake",
 };
 
 const CATALOG_EXCLUSIONS: Partial<Record<LevelCategory, ReadonlySet<string>>> =
@@ -431,10 +433,8 @@ const CATALOG_EXCLUSIONS: Partial<Record<LevelCategory, ReadonlySet<string>>> =
       "Yellow Card",
     ]),
     equipment: new Set([
-      "Cosmic Portal",
       "Draconic Counter",
       "ElectroAttack",
-      "Frost Charm",
       "MP Trap Shield",
       "Piercing Arrow",
     ]),
@@ -533,6 +533,7 @@ const EQUIPMENT_HERO_BY_NAME: Readonly<Record<string, string>> = {
   "Action Figure": "Archer Queen",
   "Archer Puppet": "Archer Queen",
   "Barbarian Puppet": "Barbarian King",
+  "Portal Pendant": "Minion Prince",
   "Dark Crown": "Minion Prince",
   "Dark Orb": "Minion Prince",
   "Earthquake Boots": "Barbarian King",
@@ -542,6 +543,7 @@ const EQUIPMENT_HERO_BY_NAME: Readonly<Record<string, string>> = {
   "Fire Heart": "Dragon Duke",
   Fireball: "Grand Warden",
   "Flame Blower": "Dragon Duke",
+  "Frost Flake": "Royal Champion",
   "Frozen Arrow": "Archer Queen",
   "Giant Arrow": "Archer Queen",
   "Giant Gauntlet": "Barbarian King",
@@ -570,7 +572,6 @@ const EQUIPMENT_HERO_BY_NAME: Readonly<Record<string, string>> = {
   "Spiky Ball": "Barbarian King",
   "Stick Horse": "Barbarian King",
   "Stun Blaster": "Dragon Duke",
-  "Portal Pendant": "Minion Prince",
   Vampstache: "Barbarian King",
 };
 
@@ -680,9 +681,13 @@ export function canonicalUnitDisplayName(
   name: string,
 ): string {
   const canonicalName = canonicalUnitName(name);
-  return category === "spells"
-    ? (SPELL_DISPLAY_NAMES[canonicalName] ?? name)
-    : name;
+  if (category === "spells") return SPELL_DISPLAY_NAMES[canonicalName] ?? name;
+  if (category !== "equipment") return name;
+  return (
+    Object.keys(LEVEL_CAPS.equipment).find(
+      (candidate) => canonicalUnitName(candidate) === canonicalName,
+    ) ?? name
+  );
 }
 
 export function unitCatalog(
@@ -692,10 +697,12 @@ export function unitCatalog(
     .filter(([name, levels]) => {
       const distinctLevels = new Set(levels.filter((level) => level > 0));
       const singleLevelPet = category === "pets" && name === "Crow";
+      const availableEquipment =
+        category === "equipment" && levels.some((level) => level > 0);
       return (
         !CATALOG_EXCLUSIONS[category]?.has(name) &&
         unitUnlockTownHall(category, name) !== undefined &&
-        (distinctLevels.size > 1 || singleLevelPet)
+        (availableEquipment || distinctLevels.size > 1 || singleLevelPet)
       );
     })
     .map(([name, levels]) => ({

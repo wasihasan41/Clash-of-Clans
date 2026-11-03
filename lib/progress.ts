@@ -123,8 +123,8 @@ export function unitsAtTownHall(
     if (category === "troops" && isSuperTroop(unit.name)) return [];
     const canonicalName = canonicalUnitName(unit.name);
     if (seen.has(canonicalName)) return [];
-    seen.add(canonicalName);
     const current = unitAtTownHall(unit, category, townHallLevel);
+    if (current) seen.add(canonicalName);
     return current ? [current] : [];
   });
 

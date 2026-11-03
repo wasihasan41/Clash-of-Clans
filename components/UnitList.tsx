@@ -18,6 +18,56 @@ const LEVEL_CATEGORY_BY_KIND: Record<UnitKind, LevelCategory> = {
   equipment: "equipment",
 };
 
+const EQUIPMENT_DISPLAY_ORDER = [
+  "Barbarian Puppet",
+  "Rage Vial",
+  "Earthquake Boots",
+  "Vampstache",
+  "Giant Gauntlet",
+  "Spiky Ball",
+  "Snake Bracelet",
+  "Stick Horse",
+  "Archer Puppet",
+  "Invisibility Vial",
+  "Healer Puppet",
+  "Giant Arrow",
+  "Frozen Arrow",
+  "Monolith Arrow",
+  "Magic Mirror",
+  "Action Figure",
+  "Henchmen Puppet",
+  "Dark Orb",
+  "Metal Pants",
+  "Noble Iron",
+  "Dark Crown",
+  "Meteor Staff",
+  "Portal Pendant",
+  "Eternal Tome",
+  "Life Gem",
+  "Rage Gem",
+  "Healing Tome",
+  "Heroic Torch",
+  "Fireball",
+  "Lavaloon Puppet",
+  "Seeking Shield",
+  "Royal Gem",
+  "Hog Rider Puppet",
+  "Rocket Spear",
+  "Electro Boots",
+  "Haste Vial",
+  "Frost Flake",
+  "Fire Heart",
+  "Flame Blower",
+  "Rocket Backpack",
+  "Stun Blaster",
+  "Electro Fangs",
+  "Revenge Deck",
+] as const;
+
+const EQUIPMENT_DISPLAY_INDEX = new Map<string, number>(
+  EQUIPMENT_DISPLAY_ORDER.map((name, index) => [name, index]),
+);
+
 export function UnitList({
   title,
   units,
@@ -41,6 +91,14 @@ export function UnitList({
       : unitsAtTownHall(homeUnits, LEVEL_CATEGORY_BY_KIND[kind], townHallLevel);
   if (home.length === 0) return null;
 
+  const displayUnits =
+    kind === "equipment"
+      ? [...home].sort(
+          (a, b) =>
+            (EQUIPMENT_DISPLAY_INDEX.get(a.name) ?? Infinity) -
+            (EQUIPMENT_DISPLAY_INDEX.get(b.name) ?? Infinity),
+        )
+      : home;
   const progress = calcProgress(home);
 
   return (
@@ -81,7 +139,7 @@ export function UnitList({
       </div>
 
       <ul className="units">
-        {home.map((u) => (
+        {displayUnits.map((u) => (
           <li key={u.name}>
             <div className="unit-head">
               <span className="unit-name">
